@@ -19,16 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install poppler (macOS)
-        if: runner.os == 'macOS'
-        run: brew install poppler
-
-      - name: Install poppler (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpoppler-cpp-dev pkg-config
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:

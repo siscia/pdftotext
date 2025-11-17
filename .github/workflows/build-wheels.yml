@@ -1,0 +1,44 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [ published ]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install poppler (macOS)
+        if: runner.os == 'macOS'
+        run: brew install poppler
+
+      - name: Install poppler (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpoppler-cpp-dev pkg-config
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_SKIP: pp* *-musllinux*
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_BEFORE_ALL_LINUX: yum install -y poppler-cpp-devel
+          CIBW_BEFORE_ALL_MACOS: brew install poppler
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
